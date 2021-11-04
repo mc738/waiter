@@ -1,5 +1,5 @@
 ﻿use std::fs;
-use std::process::Command;
+use std::process::{Command, Output};
 use regex::Regex;
 use crate::http::{HttpRequest, HttpResponse};
 
@@ -13,6 +13,7 @@ pub struct StaticRoute {
 pub struct CommandRoute {
     command_name: String,
     args: Vec<String>,
+    response_handler: fn(Output) -> HttpResponse
 }
 
 #[derive(Clone)]
@@ -26,8 +27,8 @@ impl RouteHandler {
         RouteHandler::Static(StaticRoute { content_path, content_type })
     }
     
-    pub fn create_command(command_name: String, args: Vec<String>) -> RouteHandler {
-        RouteHandler::Command(CommandRoute { command_name, args })
+    pub fn create_command(command_name: String, args: Vec<String>, response_handler: fn(Output) -> HttpResponse) -> RouteHandler {
+        RouteHandler::Command(CommandRoute { command_name, args, response_handler })
     }
     
     pub fn handle(&self, request: HttpRequest) -> Result<HttpResponse, &'static str> {
@@ -46,7 +47,7 @@ impl RouteHandler {
                         .output()
                         .unwrap();
                 
-                let response = HttpResponse::create(200, String::from("text/html"), Some(output.stdout));
+                let response = (cr.response_handler)(output);
                 Ok(response)
             }
         }

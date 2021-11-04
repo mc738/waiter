@@ -13,6 +13,7 @@ use crate::connection_pool::ConnectionPool;
 use crate::logging::logging::{Log, Logger};
 use crate::server::Server;
 use regex::Regex;
+use crate::http::HttpResponse;
 use crate::routing::{Route, RouteHandler, RouteMap};
 
 fn main() {
@@ -24,12 +25,16 @@ fn main() {
     Server::start(create_routes());
 }
 
+fn handle_command(output: Output) -> HttpResponse {
+    HttpResponse::create(200, String::from("text/html"), Some(output.stdout))
+}
+
 fn create_routes() -> RouteMap {
     
     let args = vec![ format!("-c"), format!("lscpu") ];
     
     let home_handler = RouteHandler::create_static(format!("index.html"), format!("text/html"));
-    let info_handler = RouteHandler::create_command(format!("sh"), args);
+    let info_handler = RouteHandler::create_command(format!("sh"), args, handle_command);
     let home = Route::new(Regex::new(r"(^/index$|^/$|^/home$)").unwrap(), home_handler);
     let info = Route::new(Regex::new(r"^/info$").unwrap(), info_handler);
     RouteMap::new(vec![ home, info ])

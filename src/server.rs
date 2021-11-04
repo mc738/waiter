@@ -133,6 +133,7 @@ fn handle_response(mut stream: &TcpStream, mut response: HttpResponse) {
     }
 }
 
+/*
 fn get_details() -> Output {
     Command::new("sh")
         .arg("-c")
@@ -140,6 +141,7 @@ fn get_details() -> Output {
         .output()
         .expect("failed to execute process")
 }
+*/
 
 fn handle_500() -> HttpResponse {
     let body = " { \"message\": \"Server error\"}".as_bytes().to_vec();
