@@ -1,0 +1,21 @@
+﻿{
+  "name": "waiter_test",
+  "address": "0.0.0.0:7878",
+  "routes": [
+    {
+      "regex": "(^/index$|^/$|^/home$)",
+      "type": "static",
+      "content_path": "index.html",
+      "content_type": "text/html"
+    },
+    {
+      "regex": "/info$",
+      "type": "command",
+      "command_name": "sh",
+      "args": [
+        "-c",
+        "lscpu"
+      ]
+    }
+  ]
+}

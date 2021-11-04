@@ -4,12 +4,14 @@ use regex::Regex;
 use crate::http::{HttpRequest, HttpResponse};
 
 #[derive(Clone)]
+#[derive(Debug)]
 pub struct StaticRoute {
     content_path: String,
     content_type: String,
 }
 
 #[derive(Clone)]
+#[derive(Debug)]
 pub struct CommandRoute {
     command_name: String,
     args: Vec<String>,
@@ -17,6 +19,7 @@ pub struct CommandRoute {
 }
 
 #[derive(Clone)]
+#[derive(Debug)]
 pub enum RouteHandler {
     Static(StaticRoute),
     Command(CommandRoute),
@@ -55,6 +58,7 @@ impl RouteHandler {
 }
 
 #[derive(Clone)]
+#[derive(Debug)]
 pub struct Route {
     route_regex: Regex,
     handler: RouteHandler,
@@ -71,6 +75,7 @@ impl Route {
 }
 
 #[derive(Clone)]
+#[derive(Debug)]
 pub struct RouteMap {
     pub routes: Vec<Route>,
 }
