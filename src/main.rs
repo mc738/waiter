@@ -1,58 +1,36 @@
-use std::io::prelude::*;
+mod logging;
+mod connection_pool;
+mod http;
+mod server;
+mod orchestration;
+mod routing;
+
 use std::net::{TcpListener, TcpStream};
 use std::fs;
 use std::fs::read_to_string;
 use std::process::{Command, Output};
+use crate::connection_pool::ConnectionPool;
+use crate::logging::logging::{Log, Logger};
+use crate::server::Server;
+use regex::Regex;
+use crate::routing::{Route, RouteHandler, RouteMap};
 
 fn main() {
-    let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
+
+    let re = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
+    assert!(re.is_match("2014-01-01"));
     
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
-        //println!("Connection established!");
-        handle_connection(stream);
-    }
+    
+    Server::start(create_routes());
 }
 
-fn handle_connection(mut stream: TcpStream) {
-    let mut buffer = [0; 1024];
+fn create_routes() -> RouteMap {
     
-    stream.read(&mut buffer).unwrap();
+    let args = vec![ format!("-c"), format!("lscpu") ];
     
-    println!("Request: {}", String::from_utf8_lossy(&buffer[..]));
-    
-    let home = b"GET / HTTP/1.1\r\n";
-    
-    if buffer.starts_with(home) {
-        let contents = fs::read_to_string("index.html").unwrap();
-        let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n{}",
-            contents.len(),
-            contents
-        );
-        stream.write(response.as_bytes()).unwrap();
-        stream.flush().unwrap();
-    }
-    else {
-        let output = get_details();
-        
-        let contents = String::from_utf8_lossy(&*output.stdout);
-        
-        let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n{}",
-            contents.len(),
-            contents
-            
-        );
-        stream.write(response.as_bytes()).unwrap();
-        stream.flush().unwrap();
-    }
-}
-
-fn get_details() -> Output {
-    Command::new("sh")
-        .arg("-c")
-        .arg("lscpu")
-        .output()
-        .expect("failed to execute process")
+    let home_handler = RouteHandler::create_static(format!("index.html"), format!("text/html"));
+    let info_handler = RouteHandler::create_command(format!("sh"), args);
+    let home = Route::new(Regex::new(r"(^/index$|^/$|^/home$)").unwrap(), home_handler);
+    let info = Route::new(Regex::new(r"^/info$").unwrap(), info_handler);
+    RouteMap::new(vec![ home, info ])
 }
