@@ -7,11 +7,12 @@ use regex::Regex;
 use serde::de::Unexpected::Str;
 use uuid;
 use uuid::Uuid;
+use crate::configuration::Configuration;
 use crate::connection_pool::ConnectionPool;
 use crate::http::{HttpRequest, HttpRequestHeader, HttpResponse};
 use crate::http::HttpVerb::GET;
 use crate::logging::logging::{Log, Logger};
-use crate::orchestration::Orchestrator;
+use crate::orchestration::{Aggregator, Orchestrator};
 use crate::routing::RouteMap;
 
 
@@ -24,19 +25,11 @@ pub struct ConnectionContext {
 }
 
 impl Server {
-    pub fn start(routes: RouteMap) {
-        let log = Log::create().unwrap();
-        let logger = log.get_logger();
-        let (job_sender, job_receiver) = channel();
+    pub fn start(config: Configuration, logger: Logger) {
+        
+        let listener = TcpListener::bind(config.address).unwrap();
 
-        let orch_logger = log.get_logger();
-        let _ = thread::spawn(|| {
-            Orchestrator::run(job_receiver, orch_logger)
-        });
-
-        let listener = TcpListener::bind("0.0.0.0:7878").unwrap();
-
-        let connection_pool = ConnectionPool::new(4, logger, job_sender.clone());
+        let connection_pool = ConnectionPool::new(4, logger.clone());
 
         //let logger = log.get_logger();
 
@@ -44,11 +37,11 @@ impl Server {
             let stream = stream.unwrap();
             let remote = stream.peer_addr().unwrap();
             let context = ConnectionContext::new(String::from(remote.ip().to_string()));
-            let logger = log.get_logger();
+            let logger = logger.clone();
 
             logger.log_info(format!("{}", context.slug), format!("Request received from {}", context.from));
             
-            let rm = routes.clone();
+            let rm = config.routes.clone();
             connection_pool.execute(|| {
                 handle_connection(stream, logger, context, rm)
             });

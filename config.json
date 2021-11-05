@@ -5,13 +5,34 @@
     {
       "regex": "(^/index$|^/$|^/home$)",
       "type": "static",
-      "content_path": "index.html",
+      "content_path": "test_website/index.html",
       "content_type": "text/html"
+    },
+    {
+      "regex": "^/css/style.css$",
+      "type": "static",
+      "content_path": "test_website/css/style.css",
+      "content_type": "text/css"
+    },
+    {
+      "regex": "^/js/index.js$",
+      "type": "static",
+      "content_path": "test_website/js/index.js",
+      "content_type": "text/javascript"
     },
     {
       "regex": "/info$",
       "type": "command",
       "command_name": "sh",
+      "args": [
+        "-c",
+        "lscpu"
+      ]
+    },
+    {
+      "regex": "/job$",
+      "type": "job",
+      "name": "sh",
       "args": [
         "-c",
         "lscpu"
