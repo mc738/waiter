@@ -1,0 +1,41 @@
+﻿{
+  "jobs": [
+    {
+      "name": "test-job-1",
+      "actions": [
+        {
+          "name": "test-action-1",
+          "type": "command",
+          "command_name": "sh",
+          "args": [
+            "-c",
+            "lscpu"
+          ]
+        },
+        {
+          "name": "test-action-2",
+          "type": "command",
+          "command_name": "git",
+          "args": [
+            "--version"
+          ]
+        },
+        {
+          "name": "test-action-3",
+          "type": "test",
+          "wait_time": 1000
+        },
+        {
+          "name": "test-action-4",
+          "type": "test",
+          "wait_time": 2000
+        },
+        {
+          "name": "test-action-5",
+          "type": "test",
+          "wait_time": 3000
+        }
+      ]
+    }
+  ]
+}

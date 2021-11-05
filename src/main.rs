@@ -27,6 +27,8 @@ use crate::orchestration::{Aggregator, Orchestrator};
 
 fn main() {
 
+    let jobs_config = JobsConfiguration::load("jobs.json".to_string()).unwrap();
+    
     let log = Log::create().unwrap();
     let logger = log.get_logger();
     let (job_sender, job_receiver) = channel();
@@ -36,11 +38,12 @@ fn main() {
     let orch_agg = aggregator.clone();
 
     let _ = thread::spawn(|| {
-        Orchestrator::run(job_receiver, orch_agg, orch_logger)
+        Orchestrator::run(job_receiver, orch_agg, jobs_config, orch_logger)
     });
     
     match Configuration::load("config.json".to_string(), job_sender.clone()) {
         Ok(config) => {
+            //println!("{:?}", jobs_config);
             Server::start(config, log.get_logger())
         }
         Err(e) => {

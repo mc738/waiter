@@ -1,11 +1,11 @@
 ﻿use std::{fs, thread, time};
 use std::process::{Command, Output};
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Sender};
 use regex::Regex;
 use uuid::Uuid;
 use crate::commands::run_command;
 use crate::http::{HttpRequest, HttpResponse};
-use crate::orchestration::{Job, JobHandler};
+use crate::orchestration::{Job, JobCommand, JobHandler};
 
 #[derive(Clone)]
 #[derive(Debug)]
@@ -51,7 +51,7 @@ impl RouteHandler {
         RouteHandler::Job(JobRoute { name, args })
     }
     
-    pub fn handle(&self, job_handler: Sender<JobHandler>, request: HttpRequest) -> Result<HttpResponse, &'static str> {
+    pub fn handle(&self, job_handler: Sender<JobCommand>, request: HttpRequest) -> Result<HttpResponse, &'static str> {
         match self {
             RouteHandler::Static(sr) => {
                 let body = fs::read(&sr.content_path).unwrap();
@@ -65,21 +65,14 @@ impl RouteHandler {
                 Ok(response)
             }
             RouteHandler::Job(jr) => {
-                job_handler.send(Box::new(test_job));
+                let (sender, reply_channel) = channel();
+                job_handler.send(JobCommand { name: jr.name.clone(), reply_channel: sender });
                 let body = "Job queued".bytes().collect();
                 let response = HttpResponse::create(201, "text/plain".to_string(), Some(body));
                 Ok(response)
             }
         }
     }
-}
-
-fn test_job(id: Uuid) -> String {
-    println!("*** TEST JOB - Job {} received. Simulating work...", id);
-    let wait_time = time::Duration::from_millis(1000);
-    thread::sleep(wait_time);
-    println!("*** TEST JOB - Job {} completed.", id);
-    format!("Job reference: {}", id)
 }
 
 #[derive(Clone)]
@@ -103,12 +96,12 @@ impl Route {
 #[derive(Debug)]
 pub struct RouteMap {
     pub routes: Vec<Route>,
-    job_handler: Sender<JobHandler>
+    job_handler: Sender<JobCommand>
 }
 
 impl RouteMap {
     
-    pub fn new(job_handler: Sender<JobHandler>, routes: Vec<Route>) -> RouteMap {
+    pub fn new(job_handler: Sender<JobCommand>, routes: Vec<Route>) -> RouteMap {
         RouteMap { routes, job_handler }
     }
     

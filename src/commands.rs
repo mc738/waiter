@@ -19,6 +19,23 @@ pub fn run_command(name: &String, args: &Vec<String>) -> Result<Output, &'static
     }
 }
 
+pub fn run_command_static(name: String, args: Vec<String>) -> Result<Output, &'static str> {
+    let mut command = Command::new(name);
+    let output =
+        args
+            .iter()
+            .fold(&mut command, |mut acc, arg| acc.arg(arg))
+            .output();
+
+    match output {
+        Ok(output) => Ok(output),
+        Err(e) => {
+            Err("Error running command.")
+        }
+    }
+}
+
+
 pub fn format_output(output: Output) -> Result<String, &'static str> {
     match output.status.success() {
         true => {

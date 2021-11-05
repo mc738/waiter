@@ -32,7 +32,7 @@
     {
       "regex": "/job$",
       "type": "job",
-      "name": "sh",
+      "name": "test-job-1",
       "args": [
         "-c",
         "lscpu"
