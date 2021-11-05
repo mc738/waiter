@@ -20,12 +20,20 @@ use crate::server::Server;
 use regex::{Error, Regex};
 use serde_json::{Map, Value};
 use crate::agents::{Agent, MessageType};
+use crate::commands::{format_output, run_command, run_command_static};
 use crate::http::HttpResponse;
 use crate::routing::{Route, RouteHandler, RouteMap};
 use crate::configuration::*;
 use crate::orchestration::{Aggregator, Orchestrator};
 
 fn main() {
+    
+    let args = vec![ "--version".to_string() ];
+    let r = run_command_static("git".to_string(), args);
+    match r {
+        Ok(r) => println!("{}", format_output(r).unwrap()),
+        Err(e) => println!("{}", e)
+    }
 
     let jobs_config = JobsConfiguration::load("jobs.json".to_string()).unwrap();
     

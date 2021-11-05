@@ -310,7 +310,7 @@ fn create_action(mut action_obj: &Value) -> Result<ActionType, &'static str> {
 
                     match get_string(type_value).as_str() {
                         "command" => {
-                            let command_values = (ao.get("name"), ao.get("args"));
+                            let command_values = (ao.get("command_name"), ao.get("args"));
                             match command_values {
                                 (Some(name), Some(args)) => {
                                     let argv =

@@ -1,7 +1,8 @@
 ﻿use std::{thread, time};
 use std::collections::HashMap;
+use std::process::Output;
 use std::sync::{Arc, mpsc, Mutex};
-use std::sync::mpsc::{Sender, Receiver, TryRecvError};
+use std::sync::mpsc::{Sender, Receiver, TryRecvError, SendError};
 use std::thread::JoinHandle;
 use uuid::Uuid;
 use crate::commands::{format_output, run_command, run_command_static};
@@ -81,19 +82,6 @@ impl Orchestrator {
                     //workers.execute(id, job)        
                 }
             }
-            
-            
-            
-            // Get actions.
-            
-            // Send actions to workers.
-            
-            // Send job set to aggregator.
-            
-            // Send back job_id.
-            
-            // Send new job to aggregator.
-            
         }
     }
 }
@@ -112,16 +100,29 @@ fn create_job_handler(action: &ActionType) -> Job {
                 test_job(tc.wait_time.unsigned_abs())   
             }
         };
-    
     Job { id, handler: job_handler }
-    
 }
 
 fn execute_command(name: String, args: Vec<String>) -> JobHandler {
-    Box::new(|id: Uuid|{
-        let output= run_command_static("".to_string(), Vec::new()).unwrap();
-        //let format
-        format_output(output).unwrap()
+    Box::new(move |id: Uuid|{
+        match  run_command_static(name.to_string(), args) {
+            Ok(output) => {
+                match format_output(output) {
+                    Ok(r) => {
+                        println!("***************************** Result: {}", r);
+                        r
+                    }
+                    Err(e) => {
+                        println!("******************************** Error: {}", e);
+                        e.to_string()
+                    }
+                }
+            }
+            Err(e) => {
+                println!("********************************************* {}", e);
+                "error".to_string()
+            }
+        }
     })
 }
 
@@ -165,7 +166,7 @@ fn aggregating_handler(receiver: Receiver<AggregatorMessage>, logger: Logger) {
 
     logger.log_info("aggregator".to_string(),"Aggregator running.".to_string());
     loop {
-        logger.log_debug("aggregator".to_string(),"Checking for messages.".to_string());
+        //logger.log_debug("aggregator".to_string(),"Checking for messages.".to_string());
         match receiver.try_recv() {
             Ok(msg) => {
                 match msg {
@@ -183,7 +184,7 @@ fn aggregating_handler(receiver: Receiver<AggregatorMessage>, logger: Logger) {
                 }
             }
             Err(e) => {
-                logger.log_debug("aggregator".to_string(), format!("No messages received. Reason: {}", e));
+                //logger.log_debug("aggregator".to_string(), format!("No messages received. Reason: {}", e));
                 let wait_time = time::Duration::from_millis(1000);
                 thread::sleep(wait_time);
             }
@@ -217,7 +218,12 @@ impl WorkerPool {
                 handler: Box::new(f)
             };
             
-        self.sender.send(job).unwrap();
+        match self.sender.send(job) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Error: {}", e)
+            }
+        };
     }
 }
 
