@@ -23,7 +23,7 @@
         {
           "name": "test-action-3",
           "type": "test",
-          "wait_time": 1000
+          "wait_time": 10000
         },
         {
           "name": "test-action-4",

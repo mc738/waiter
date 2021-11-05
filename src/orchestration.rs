@@ -63,22 +63,20 @@ impl Orchestrator {
                 }
                 Some(jc) => {
                     let id = Uuid::new_v4();
-                    
+                    logger.log_info(format!("orch"), format!("Job received. Assigned id: {}", id));
                     let job_ids: Vec<Uuid> =
                         jc.actions
                             .iter()
                             .map(|a|{
                               let j = create_job_handler(a);
                                 workers.execute(j.id, j.handler);
-                                aggregator.send_jobs(id);
+                                aggregator.send_jobs(j.id);
                                 j.id
                             })
                             .collect();
                     
                     
                     // Create the job handler(s) for actions.
-                    logger.log_info(format!("orch"), format!("Job received. Assigned id: {}", id));
-                    aggregator.send_jobs(id);
                     //workers.execute(id, job)        
                 }
             }
