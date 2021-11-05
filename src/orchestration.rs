@@ -109,7 +109,7 @@ fn execute_command(name: String, args: Vec<String>) -> JobHandler {
             Ok(output) => {
                 match format_output(output) {
                     Ok(r) => {
-                        println!("***************************** Result: {}", r);
+                        println!("******************************** Job {} result: {}", id, r);
                         r
                     }
                     Err(e) => {
@@ -221,7 +221,7 @@ impl WorkerPool {
         match self.sender.send(job) {
             Ok(_) => {}
             Err(e) => {
-                println!("Error: {}", e)
+                println!("Error sending job: {}", e)
             }
         };
     }

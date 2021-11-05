@@ -53,7 +53,7 @@ impl JobsConfiguration {
     pub fn load(path: String) -> Result<JobsConfiguration, &'static str> {
         load_jobs_config(path)
     }
-    
+
     pub fn get_job(&self, name: &str) -> Option<&JobConfiguration> {
         self.jobs.get(name)
     }
@@ -90,7 +90,7 @@ fn load_config(path: String, job_handler: Sender<JobCommand>) -> Result<Configur
             Ok(Configuration { name, address, routes })
         }
         Err(e) => {
-            println!("Error parsing config.json: {}", e);
+            //println!("Error parsing config.json: {}", e);
             Err("Error parsing config")
         }
     }
@@ -220,13 +220,12 @@ fn load_jobs_config(path: String) -> Result<JobsConfiguration, &'static str> {
     let config_json = config_json.trim_start_matches('﻿');
     let parse_result: Result<Value, serde_json::Error> = serde_json::from_str(&config_json.clone());
 
-    println!("{}", config_json);
+    //println!("{}", config_json);
     match parse_result {
         Ok(json) => {
             match json.get("jobs") {
                 None => Err("Jobs value not found."),
                 Some(jobs_arr) => {
-                    println!("Jobs found");
                     match jobs_arr.as_array() {
                         Some(jobs) => {
                             let mut jobs_map: HashMap<String, JobConfiguration> = HashMap::new();
@@ -236,7 +235,6 @@ fn load_jobs_config(path: String) -> Result<JobsConfiguration, &'static str> {
                                     .iter()
                                     .map(|job|
                                         {
-                                            println!("Creating job.");
                                             let r = create_job_config(&mut job.clone()).unwrap();
                                             jobs_map.insert(r.name.clone(), r);
                                         }

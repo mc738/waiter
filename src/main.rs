@@ -28,13 +28,6 @@ use crate::orchestration::{Aggregator, Orchestrator};
 
 fn main() {
     
-    let args = vec![ "--version".to_string() ];
-    let r = run_command_static("git".to_string(), args);
-    match r {
-        Ok(r) => println!("{}", format_output(r).unwrap()),
-        Err(e) => println!("{}", e)
-    }
-
     let jobs_config = JobsConfiguration::load("jobs.json".to_string()).unwrap();
     
     let log = Log::create().unwrap();
